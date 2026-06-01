@@ -1,0 +1,44 @@
+/* Content styling only. The modal shell itself is the native concreteCMS dialog. */
+.ccm-ui .mcl-dialog-content {
+    padding: 0;
+}
+
+.ccm-ui .mcl-dialog-content .mcl-page-info {
+    margin-bottom: 1rem;
+}
+
+.ccm-ui .mcl-links-table {
+    margin-bottom: 0;
+}
+
+.ccm-ui .mcl-links-table th,
+.ccm-ui .mcl-links-table td {
+    vertical-align: middle;
+}
+
+.ccm-ui .mcl-link-label {
+    white-space: nowrap;
+    width: 190px;
+}
+
+.ccm-ui .mcl-link-input {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.8125rem;
+}
+
+.ccm-ui .mcl-copy-cell {
+    text-align: right;
+    width: 48px;
+}
+
+.ccm-ui .mcl-copy {
+    align-items: center;
+    display: inline-flex;
+    height: 32px;
+    justify-content: center;
+    min-width: 34px;
+}
+
+.ccm-ui .mcl-copy.mcl-copied {
+    font-weight: 700;
+}

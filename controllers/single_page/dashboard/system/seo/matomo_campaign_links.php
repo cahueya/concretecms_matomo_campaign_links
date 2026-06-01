@@ -101,9 +101,9 @@ class MatomoCampaignLinks extends DashboardPageController
         ];
     }
 
-    private function generateKey(string $medium, string $content, int $rowNumber): string
+    private function generateKey(string $source, string $content, int $rowNumber): string
     {
-        $base = trim($medium . ' ' . $content);
+        $base = trim($source . ' ' . $content);
         if ($base === '') {
             $base = 'preset_' . $rowNumber;
         }
@@ -115,16 +115,16 @@ class MatomoCampaignLinks extends DashboardPageController
         return $base !== '' ? $base : 'preset_' . $rowNumber;
     }
 
-    private function generateLabel(string $medium, string $content): string
+    private function generateLabel(string $source, string $content): string
     {
-        $medium = trim($medium);
+        $source = trim($source);
         $content = trim($content);
 
-        if ($medium !== '' && $content !== '') {
-            return $medium . ', ' . $content;
+        if ($source !== '' && $content !== '') {
+            return $source . ', ' . $content;
         }
 
-        return $medium !== '' ? $medium : $content;
+        return $source !== '' ? $source : $content;
     }
 
     private function parsePresetRows(array $rows): array
@@ -159,7 +159,7 @@ class MatomoCampaignLinks extends DashboardPageController
                 continue;
             }
 
-            $key = $this->generateKey($medium, $content, $rowNumber);
+            $key = $this->generateKey($source, $content, $rowNumber);
             $uniqueKey = $key;
             $duplicateIndex = 2;
             while (isset($seenKeys[$uniqueKey])) {
@@ -171,7 +171,7 @@ class MatomoCampaignLinks extends DashboardPageController
             $presets[] = [
                 'active' => $active,
                 'key' => $uniqueKey,
-                'label' => $this->generateLabel($medium, $content),
+                'label' => $this->generateLabel($source, $content),
                 'source' => $source,
                 'medium' => $medium,
                 'content' => $content,

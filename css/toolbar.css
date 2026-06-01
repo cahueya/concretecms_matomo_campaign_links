@@ -16,9 +16,17 @@
     vertical-align: middle;
 }
 
-.ccm-ui .mcl-link-label {
+.ccm-ui .mcl-source-cell,
+.ccm-ui .mcl-content-cell {
     white-space: nowrap;
-    width: 190px;
+}
+
+.ccm-ui .mcl-source-cell {
+    width: 160px;
+}
+
+.ccm-ui .mcl-content-cell {
+    width: 140px;
 }
 
 .ccm-ui .mcl-link-input {

@@ -16,7 +16,7 @@ class Controller extends Package
 {
     protected $pkgHandle = 'matomo_campaign_links';
     protected $appVersionRequired = '9.0.0';
-    protected $pkgVersion = '0.2.0';
+    protected $pkgVersion = '0.2.2';
     protected $pkgAutoloaderRegistries = [
         'controllers' => '\\Concrete\\Package\\MatomoCampaignLinks\\Controller',
     ];

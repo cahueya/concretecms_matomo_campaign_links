@@ -56,8 +56,15 @@ class CampaignLinks extends Controller
                 $params['mtm_content'] = $preset['content'];
             }
 
+            $source = (string) ($preset['source'] ?? '');
+            $medium = (string) ($preset['medium'] ?? '');
+            $content = (string) ($preset['content'] ?? '');
+
             $links[] = [
-                'label' => $preset['label'] ?? $this->generateLabel((string) ($preset['medium'] ?? ''), (string) ($preset['content'] ?? '')),
+                'source' => $source,
+                'medium' => $medium,
+                'content' => $content,
+                'label' => $this->generateLabel($source, $content),
                 'url' => $this->appendQuery($baseUrl, array_filter($params, static function ($value) {
                     return $value !== null && $value !== '';
                 })),
@@ -83,13 +90,22 @@ class CampaignLinks extends Controller
 
         $html .= '<div class="table-responsive">';
         $html .= '<table class="table table-striped table-hover mcl-links-table">';
+        $html .= '<thead><tr>';
+        $html .= '<th>' . t('Source') . '</th>';
+        $html .= '<th>' . t('Content') . '</th>';
+        $html .= '<th>' . t('Link') . '</th>';
+        $html .= '<th class="mcl-copy-cell"><span class="visually-hidden">' . t('Copy') . '</span></th>';
+        $html .= '</tr></thead>';
         $html .= '<tbody>';
         foreach ($links as $link) {
             $url = (string) ($link['url'] ?? '');
+            $source = (string) ($link['source'] ?? '');
+            $content = (string) ($link['content'] ?? '');
             $label = (string) ($link['label'] ?? '');
             $html .= '<tr>';
-            $html .= '<th scope="row" class="mcl-link-label">' . $this->h($label) . '</th>';
-            $html .= '<td><input type="text" readonly class="form-control mcl-link-input" value="' . $this->h($url) . '"></td>';
+            $html .= '<th scope="row" class="mcl-source-cell">' . $this->h($source) . '</th>';
+            $html .= '<td class="mcl-content-cell">' . ($content !== '' ? $this->h($content) : '<span class="text-muted">—</span>') . '</td>';
+            $html .= '<td><input type="text" readonly class="form-control mcl-link-input" value="' . $this->h($url) . '" aria-label="' . $this->h($label) . '"></td>';
             $html .= '<td class="mcl-copy-cell"><button type="button" class="btn btn-secondary btn-sm mcl-copy" data-url="' . $this->h($url) . '" title="' . t('Copy link') . '" aria-label="' . t('Copy link') . '"><i class="fas fa-copy" aria-hidden="true"></i></button></td>';
             $html .= '</tr>';
         }
@@ -120,16 +136,13 @@ class CampaignLinks extends Controller
         return $url . $separator . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
     }
 
-    private function generateLabel(string $medium, string $content): string
+    private function generateLabel(string $source, string $content): string
     {
-        $medium = trim($medium);
-        $content = trim($content);
+        $parts = array_filter([trim($source), trim($content)], static function ($value) {
+            return $value !== '';
+        });
 
-        if ($medium !== '' && $content !== '') {
-            return $medium . ', ' . $content;
-        }
-
-        return $medium !== '' ? $medium : $content;
+        return implode(', ', $parts);
     }
 
     private function h(string $value): string

@@ -38,7 +38,7 @@
 
     <div class="alert alert-info mcl-dashboard-help">
         <?= t('Define the parameter series shown in the frontend Campaign Links modal.') ?><br>
-        <?= t('Campaign is generated automatically from the last URL segment of the current page. Key and label are generated automatically from medium and content.') ?>
+        <?= t('Campaign is generated automatically from the last URL segment of the current page. Medium is kept for Matomo reporting but is not shown in the frontend dialog.') ?>
     </div>
 
     <fieldset>

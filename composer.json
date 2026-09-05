@@ -10,8 +10,7 @@
       "campaign-links"
     ],
     "homepage": "https://github.com/cahueya/concretecms_matomo_campaign_links",
-    "license": "MIT"
-
+    "license": "MIT",
     "version": "0.3.2",
     "authors": [
         {

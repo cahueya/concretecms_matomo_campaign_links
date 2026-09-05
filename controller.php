@@ -1,22 +1,25 @@
 <?php
 namespace Concrete\Package\MatomoCampaignLinks;
 
+defined('C5_EXECUTE') or die('Access Denied.');
+
+use Concrete\Core\Asset\AssetList;
+use Concrete\Core\Entity\Package as PackageEntity;
+use Concrete\Core\Http\ResponseAssetGroup;
 use Concrete\Core\Package\Package;
-use Concrete\Core\Page\Single as SinglePage;
-use Concrete\Core\Support\Facade\Route;
-use Concrete\Core\Support\Facade\Events;
-use Concrete\Core\Support\Facade\Application;
-use Concrete\Core\Support\Facade\Url;
 use Concrete\Core\Page\Page;
+use Concrete\Core\Page\Single as SinglePage;
 use Concrete\Core\Permission\Checker;
-use Concrete\Core\View\View;
-use Symfony\Component\HttpFoundation\Request;
+use Concrete\Core\Support\Facade\Application;
+use Concrete\Core\Support\Facade\Events;
+use Concrete\Core\Support\Facade\Route;
+use Concrete\Core\Support\Facade\Url;
 
 class Controller extends Package
 {
     protected $pkgHandle = 'matomo_campaign_links';
     protected $appVersionRequired = '9.0.0';
-    protected $pkgVersion = '0.2.2';
+    protected $pkgVersion = '0.3.3';
     protected $pkgAutoloaderRegistries = [
         'controllers' => '\\Concrete\\Package\\MatomoCampaignLinks\\Controller',
     ];
@@ -28,20 +31,13 @@ class Controller extends Package
 
     public function getPackageDescription()
     {
-        return t('Adds a frontend toolbar button that shows Matomo campaign links for the current page.');
+        return t('Adds a frontend toolbar button that generates Matomo campaign links for the current page.');
     }
 
     public function install()
     {
         $pkg = parent::install();
-
-        $existing = Page::getByPath('/dashboard/system/seo/matomo_campaign_links');
-        if (!$existing || $existing->isError()) {
-            $sp = SinglePage::add('/dashboard/system/seo/matomo_campaign_links', $pkg);
-            if (is_object($sp)) {
-                $sp->update(['cName' => t('Matomo Campaign Links')]);
-            }
-        }
+        $this->ensureDashboardPage($pkg);
 
         return $pkg;
     }
@@ -49,39 +45,45 @@ class Controller extends Package
     public function upgrade()
     {
         parent::upgrade();
-        $this->ensureDashboardPage();
-    }
-
-    private function ensureDashboardPage(): void
-    {
-        $existing = Page::getByPath('/dashboard/system/seo/matomo_campaign_links');
-        if (!$existing || $existing->isError()) {
-            $sp = SinglePage::add('/dashboard/system/seo/matomo_campaign_links', $this);
-            if (is_object($sp)) {
-                $sp->update(['cName' => t('Matomo Campaign Links')]);
-            }
+        $pkg = $this->getPackageEntity();
+        if ($pkg) {
+            $this->ensureDashboardPage($pkg);
         }
     }
 
     public function on_start()
     {
-        Route::register('/ccm/matomo_campaign_links/dialog', '\\Concrete\\Package\\MatomoCampaignLinks\\Controller\\Dialog\\CampaignLinks::view');
+        $assetList = AssetList::getInstance();
+        $assetList->register(
+            'javascript',
+            'matomo_campaign_links/toolbar',
+            'js/toolbar.js',
+            ['version' => $this->pkgVersion],
+            $this
+        );
+        $assetList->register(
+            'javascript',
+            'matomo_campaign_links/dashboard',
+            'js/dashboard.js',
+            ['version' => $this->pkgVersion],
+            $this
+        );
+
+        Route::register(
+            '/ccm/matomo_campaign_links/dialog',
+            '\\Concrete\\Package\\MatomoCampaignLinks\\Controller\\Dialog\\CampaignLinks::view'
+        );
 
         Events::addListener('on_page_view', function ($event) {
             $app = Application::getFacadeApplication();
-            /** @var Request $request */
+
             $request = $app->make('request');
             if ($request->isXmlHttpRequest()) {
                 return;
             }
 
             $page = $event->getPageObject();
-            if (!$page || $page->isError()) {
-                return;
-            }
-
-            // Keep this off Dashboard/system pages and only show it to users who may edit the page.
-            if ($page->isAdminArea()) {
+            if (!$page || $page->isError() || $page->isAdminArea()) {
                 return;
             }
 
@@ -91,15 +93,9 @@ class Controller extends Package
             }
 
             $token = $app->make('token')->generate('matomo_campaign_links');
-            $jsUrl = $this->getRelativePath() . '/js/toolbar.js';
-            $cssUrl = $this->getRelativePath() . '/css/toolbar.css';
-
-            $config = json_encode([
-                'dialogEndpoint' => (string) Url::to('/ccm/matomo_campaign_links/dialog'),
-                'cID' => (int) $page->getCollectionID(),
-                'token' => $token,
-                'buttonLabel' => t('Campaign Links'),
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $dialogUrl = (string) Url::to('/ccm/matomo_campaign_links/dialog');
+            $dialogUrl .= '?cID=' . (int) $page->getCollectionID();
+            $dialogUrl .= '&ccm_token=' . rawurlencode($token);
 
             /** @var \Concrete\Core\Application\Service\UserInterface\Menu $menuHelper */
             $menuHelper = $app->make('helper/concrete/ui/menu');
@@ -107,19 +103,31 @@ class Controller extends Package
                 'icon' => 'share',
                 'label' => t('Campaign Links'),
                 'position' => 'right',
-                'href' => '#',
+                'href' => $dialogUrl,
                 'linkAttributes' => [
-                    'id' => 'mcl-toolbar-button',
-                    'data-mcl-button' => '1',
-                    'role' => 'button',
+                    'class' => 'dialog-launch',
+                    'dialog-title' => t('Campaign Links'),
+                    'dialog-width' => '980',
+                    'dialog-height' => '520',
+                    'dialog-modal' => 'false',
+                    'aria-haspopup' => 'dialog',
                 ],
             ]);
 
-            $view = View::getInstance();
-            $view->addHeaderItem('<link rel="stylesheet" href="' . h($cssUrl) . '">');
-            $view->addFooterItem('<script>window.MatomoCampaignLinks = ' . $config . ';</script>');
-            $view->addFooterItem('<script src="' . h($jsUrl) . '"></script>');
+            ResponseAssetGroup::get()->requireAsset('javascript', 'matomo_campaign_links/toolbar');
         });
     }
 
+    private function ensureDashboardPage(PackageEntity $pkg): void
+    {
+        $existing = Page::getByPath('/dashboard/system/seo/matomo_campaign_links');
+        if ($existing && !$existing->isError()) {
+            return;
+        }
+
+        $page = SinglePage::add('/dashboard/system/seo/matomo_campaign_links', $pkg);
+        if (is_object($page)) {
+            $page->update(['cName' => t('Matomo Campaign Links')]);
+        }
+    }
 }

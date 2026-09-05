@@ -1,19 +1,18 @@
 {
-  "name": "matomo_campaign_links",
-  "version": "0.3.2",
-  "private": true,
-  "description": "Concrete CMS 9+ package for generating Matomo campaign links from the frontend page toolbar.",
-  "type": "concrete5-package",
-  "license": "MIT",
-  "keywords": [
-    "concretecms",
-    "matomo",
-    "analytics",
-    "campaign",
-    "campaign-links"
-  ],
-  "homepage": "https://github.com/cahueya/concretecms_matomo_campaign_links",
-    "license": "MIT",
+    "name": "cahueya/matomo_campaign_links",
+    "description": "Concrete CMS 9+ package for generating Matomo campaign links from the frontend page toolbar.",
+    "type": "concrete5-package",
+    "keywords": [
+      "concretecms",
+      "matomo",
+      "analytics",
+      "campaign",
+      "campaign-links"
+    ],
+    "homepage": "https://github.com/cahueya/concretecms_matomo_campaign_links",
+    "license": "MIT"
+
+    "version": "0.3.2",
     "authors": [
         {
             "name": "cahueya",
